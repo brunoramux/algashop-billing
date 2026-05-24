@@ -3,6 +3,7 @@ package com.algaworks.algashop.billing.domain.model.invoice;
 import com.algaworks.algashop.billing.domain.model.DomainException;
 import com.algaworks.algashop.billing.domain.model.IdGenerator;
 import io.micrometer.common.util.StringUtils;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -14,8 +15,10 @@ import java.util.*;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
+@Entity
 public class Invoice {
 
+    @Id
     @EqualsAndHashCode.Include
     private UUID id;
 
@@ -29,12 +32,30 @@ public class Invoice {
 
     private BigDecimal totalAmount;
 
+    @Enumerated(EnumType.STRING)
     private InvoiceStatus status;
 
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private PaymentSettings paymentSettings;
 
+    @ElementCollection
+    @CollectionTable(name = "invoice_line_item", joinColumns = @JoinColumn(name = "invoice_id"))
     private Set<LineItem> items = new HashSet<>();
 
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "fullName", column = @Column(name = "payer_fullname")),
+            @AttributeOverride(name = "document", column = @Column(name = "payer_document")),
+            @AttributeOverride(name = "phone", column = @Column(name = "payer_phone")),
+            @AttributeOverride(name = "email", column = @Column(name = "payer_email")),
+            @AttributeOverride(name = "address.street", column = @Column(name = "payer_address_street")),
+            @AttributeOverride(name = "address.number", column = @Column(name = "payer_address_number")),
+            @AttributeOverride(name = "address.complement", column = @Column(name = "payer_address_complement")),
+            @AttributeOverride(name = "address.neighborhood", column = @Column(name = "payer_address_neighborhood")),
+            @AttributeOverride(name = "address.city", column = @Column(name = "payer_address_city")),
+            @AttributeOverride(name = "address.state", column = @Column(name = "payer_address_state")),
+            @AttributeOverride(name = "address.zipCode", column = @Column(name = "payer_address_zipCode"))
+    })
     private Payer payer;
 
     private String cancelReason;
@@ -117,6 +138,7 @@ public class Invoice {
         }
 
         PaymentSettings paymentSettings = PaymentSettings.brandNew(paymentMethod, creditCardId);
+        paymentSettings.setInvoice(this);
         this.setPaymentSettings(paymentSettings);
     }
 }
