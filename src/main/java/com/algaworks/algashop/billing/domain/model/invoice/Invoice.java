@@ -1,6 +1,6 @@
 package com.algaworks.algashop.billing.domain.model.invoice;
 
-import com.algaworks.algashop.billing.domain.model.AbstractAuditableEntity;
+import com.algaworks.algashop.billing.domain.model.AbstractAuditableAggregateRoot;
 import com.algaworks.algashop.billing.domain.model.DomainException;
 import com.algaworks.algashop.billing.domain.model.IdGenerator;
 import io.micrometer.common.util.StringUtils;
@@ -17,7 +17,7 @@ import java.util.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-public class Invoice extends AbstractAuditableEntity {
+public class Invoice extends AbstractAuditableAggregateRoot<Invoice> {
 
     @Id
     @EqualsAndHashCode.Include
@@ -75,7 +75,7 @@ public class Invoice extends AbstractAuditableEntity {
         }
 
         BigDecimal totalAmount = items.stream().map(LineItem::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
-        return new Invoice(
+        Invoice invoice = new Invoice(
                 IdGenerator.generateTimeBasedUUID(),
                 orderId,
                 customerId,
@@ -90,6 +90,11 @@ public class Invoice extends AbstractAuditableEntity {
                 payer,
                 null
         );
+
+        invoice.registerEvent(new InvoiceIssueEvent(invoice.getId(), invoice.getCustomerId(),
+                invoice.getOrderId(), invoice.getIssuedAt()));
+
+        return invoice;
     }
 
     // Garantindo que o itens não possa ser alterado diretamente via getItems().setItem()
@@ -115,6 +120,9 @@ public class Invoice extends AbstractAuditableEntity {
         }
         this.setPaidAt(OffsetDateTime.now());
         this.setStatus(InvoiceStatus.PAID);
+
+        registerEvent(new InvoicePaidEvent(this.getId(), this.getCustomerId(),
+                this.getOrderId(), this.getPaidAt()));
     }
 
     public void cancel(String reason) {
@@ -124,6 +132,9 @@ public class Invoice extends AbstractAuditableEntity {
         this.setCancelReason(reason);
         this.setCanceledAt(OffsetDateTime.now());
         this.setStatus(InvoiceStatus.CANCELED);
+
+        registerEvent(new InvoiceCanceledEvent(this.getId(), this.getCustomerId(),
+                this.getOrderId(), this.getCanceledAt()));
     }
 
     public void assignPaymentGatewayCode(String code){
@@ -142,4 +153,6 @@ public class Invoice extends AbstractAuditableEntity {
         paymentSettings.setInvoice(this);
         this.setPaymentSettings(paymentSettings);
     }
+
+
 }
