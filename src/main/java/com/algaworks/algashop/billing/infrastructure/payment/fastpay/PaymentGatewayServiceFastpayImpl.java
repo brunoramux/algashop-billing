@@ -47,7 +47,7 @@ public class PaymentGatewayServiceFastpayImpl implements PaymentGatewayService  
                 .zipCode(address.getZipCode())
                 .addressLine1(address.getStreet() + ", " + address.getNumber())
                 .addressLine2(address.getComplement())
-                .replyToUrl("http://myshop.com/payments/notifications");
+                .replyToUrl("http://host.docker.internal:8082/api/v1/webhooks/fastpay");
 
         switch (request.getMethod()){
             case CREDIT_CARD -> {

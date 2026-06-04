@@ -6,12 +6,14 @@ import com.algaworks.algashop.billing.domain.model.invoice.*;
 import com.algaworks.algashop.billing.domain.model.invoice.payment.Payment;
 import com.algaworks.algashop.billing.domain.model.invoice.payment.PaymentGatewayService;
 import com.algaworks.algashop.billing.domain.model.invoice.payment.PaymentRequest;
+import com.algaworks.algashop.billing.domain.model.invoice.payment.PaymentStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -66,16 +68,34 @@ public class InvoiceManagementApplicationService {
         invoiceRepository.saveAndFlush(invoice);
     }
 
+    @Transactional
+    public void updatePaymentStatus(UUID invoiceId, PaymentStatus status) {
+        Invoice invoice = invoiceRepository.findById(invoiceId).orElseThrow(
+                () -> new DomainException("Invoice with ID " + invoiceId + " does not exist.")
+        );
+
+        Payment payment = Payment.builder()
+                .gatewayCode(invoice.getPaymentSettings().getGatewayCode())
+                .invoiceId(invoice.getId())
+                .method(invoice.getPaymentSettings().getMethod())
+                .status(status)
+                .build();
+
+        invoicingService.assignPayment(invoice, payment);
+        invoiceRepository.saveAndFlush(invoice);
+    }
+
     private PaymentRequest toPaymentRequest(Invoice invoice) {
         return PaymentRequest.builder()
                 .invoiceId(invoice.getId())
                 .method(invoice.getPaymentSettings().getMethod())
                 .creditCardId(invoice.getPaymentSettings().getCreditCardId())
                 .amount(invoice.getTotalAmount())
+                .payer(invoice.getPayer())
                 .build();
     }
 
-    private Set<LineItem> convertToLineItems(Set<LineItemInput> items) {
+    private Set<LineItem> convertToLineItems(List<LineItemInput> items) {
         Set<LineItem> lineItems = new LinkedHashSet<>();
         int itemNumber = 1;
         for(LineItemInput item : items) {
@@ -114,5 +134,6 @@ public class InvoiceManagementApplicationService {
             throw new IllegalArgumentException("Credit card with ID " + creditCardId + " does not exist.");
         }
     }
+
 
 }

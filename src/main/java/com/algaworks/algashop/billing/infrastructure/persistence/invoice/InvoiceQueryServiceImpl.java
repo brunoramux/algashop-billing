@@ -1,4 +1,4 @@
-package com.algaworks.algashop.billing.infrastructure.persistence;
+package com.algaworks.algashop.billing.infrastructure.persistence.invoice;
 
 import com.algaworks.algashop.billing.application.invoice.query.InvoiceOutput;
 import com.algaworks.algashop.billing.application.invoice.query.InvoiceQueryService;
