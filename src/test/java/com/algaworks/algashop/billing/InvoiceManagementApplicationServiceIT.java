@@ -6,11 +6,14 @@ import com.algaworks.algashop.billing.application.invoice.PaymentSettingsInput;
 import com.algaworks.algashop.billing.domain.model.creditcard.CreditCard;
 import com.algaworks.algashop.billing.domain.model.creditcard.CreditCardRepository;
 import com.algaworks.algashop.billing.domain.model.invoice.*;
+import com.algaworks.algashop.billing.domain.model.invoice.payment.PaymentGatewayService;
+import com.algaworks.algashop.billing.infrastructure.listener.InvoiceEventListener;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,10 +37,16 @@ class InvoiceManagementApplicationServiceIT {
     @MockitoSpyBean
     private InvoicingService invoicingService;
 
+    @MockitoBean
+    private PaymentGatewayService paymentGatewayService;
+
+    @MockitoSpyBean
+    private InvoiceEventListener invoiceEventListener;
+
     @Test
     public void shouldGenerateInvoiceWithCreditCardAsPayment() {
         UUID customerId = UUID.randomUUID();
-        CreditCard creditCard = com.algaworks.algashop.billing.CreditCardTestDataBuilder.aCreditCard().build();
+        CreditCard creditCard = CreditCardTestDataBuilder.aCreditCard().build();
         creditCardRepository.saveAndFlush(creditCard);
 
         GenerateInvoiceInput input = GenerateInvoiceInputTestDataBuilder.anInput().build();

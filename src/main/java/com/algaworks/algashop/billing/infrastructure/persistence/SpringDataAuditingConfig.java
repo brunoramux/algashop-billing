@@ -23,6 +23,7 @@ public class SpringDataAuditingConfig {
         return () -> Optional.of(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
     }
 
+    @Bean
     public AuditorAware<UUID> auditorProvider() {
         return () -> Optional.of(UUID.randomUUID());
     }

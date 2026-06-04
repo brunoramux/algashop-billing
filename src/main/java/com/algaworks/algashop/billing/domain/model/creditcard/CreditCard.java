@@ -33,7 +33,7 @@ public class CreditCard {
     private String gatewayCode;
 
     public static CreditCard brandNew(UUID customerId, String lastNumbers, String brand,
-                                      Integer expMonth, Integer expYear) {
+                                      Integer expMonth, Integer expYear, String gatewayCode) {
 
         Objects.requireNonNull(customerId);
         Objects.requireNonNull(expMonth);
@@ -48,7 +48,7 @@ public class CreditCard {
                 brand,
                 expMonth,
                 expYear,
-                null
+                gatewayCode
         );
     }
 

@@ -11,6 +11,7 @@ public class CreditCardTestDataBuilder {
     private String brand = "Visa";
     private Integer expMonth = 12;
     private Integer expYear = 2025;
+    private String gatewayCode;
 
     private CreditCardTestDataBuilder() {
     }
@@ -20,7 +21,7 @@ public class CreditCardTestDataBuilder {
     }
 
     public CreditCard build() {
-        return CreditCard.brandNew(customerId, lastNumbers, brand, expMonth, expYear);
+        return CreditCard.brandNew(customerId, lastNumbers, brand, expMonth, expYear, gatewayCode);
     }
 
     public CreditCardTestDataBuilder customerId(UUID customerId) {
